@@ -1,0 +1,14 @@
+.immagineSfondo {
+    background-image: url(terra.jpg);   
+    background-size: cover;            
+    background-position: center;       
+    height: 100vh;                     
+}
+
+
+.titolo{
+    text-align: center;
+    color:  white;
+    font-size: 500%;
+
+}
