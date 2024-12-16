@@ -16,53 +16,39 @@ public class MyThread extends Thread {
         this.s = s;
     }
 
-    public void run(){
-        try {
-            while(true){
-
-            
-                BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
-                DataOutputStream out = new DataOutputStream(s.getOutputStream());
-                String[] firstline = in.readLine().split(" ");
-                String method = firstline[0];
-                String resource = firstline[1];
-                String version = firstline[2];
-                System.out.println(method + " " + resource + " " + version);
-
-                String header;
-                String contentType;
-
-                do {
-                    header = in.readLine();
-                    // System.out.println(header);
-                } while (!header.isEmpty());
-
-                if(resource.equals("/")){
-                    resource="/index.html";
-                }
-
-                System.out.println(resource);
-                File file = new File("htdocs" + resource);
-
-                //se file esiste
-                if (file.exists()) {
-
-                    String extension = resource.substring(resource.lastIndexOf(".") + 1);
+    public String traduzioneEstensioni(String resource){
+        String contentType="";
+        String extension = resource.substring(resource.lastIndexOf(".") + 1);
                     System.out.println(extension);
                     switch (extension) {
+                        case "png":
+                            contentType = "image/png";
+                            break;
                         case "css":
                             contentType = "text/css";
                             break;
                         case "html":
+                        case "htm":
                             contentType = "text/html";
                             break;
                         case "jpg":
+                        case "jpeg":
                             contentType = "image/jpg";
+                            break;
+                        case "js":
+                            contentType="application/javascript";
                             break;
                         default:
                             contentType = "text/plain";
                             break;
                     }
+        return contentType;
+    }
+
+    public void inviaFile(File file, DataOutputStream out, String version, String resource){
+             try {
+                String contentType=traduzioneEstensioni(resource);
+                    
                     out.writeBytes(version + " 200 OK\n");
                     out.writeBytes("Content-Type: " + contentType + "\n");
                     out.writeBytes("Content-Length: " + file.length() + "\n");
@@ -75,27 +61,53 @@ public class MyThread extends Thread {
                     }
                     input.close();
                     System.out.println("fine");
+             } catch (Exception e) {
+                e.printStackTrace();
+             }       
+                    
 
+    }
+
+    public String ottieniRisorsa(String resource){
+        if(resource.equals("/")){
+            resource="/index.html";
+        }
+        //+ possibili futuri controlli
+        return resource;
+    }
+
+    public void run(){
+        try {
+            while(true){
+                BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
+                DataOutputStream out = new DataOutputStream(s.getOutputStream());
+
+
+                String[] firstline = in.readLine().split(" ");
+                String method = firstline[0];
+                String resource = firstline[1];
+                String version = firstline[2];
+                System.out.println(method + " " + resource + " " + version);
+
+                String header;
+
+                do {
+                    header = in.readLine();
+                    // System.out.println(header);
+                } while (!header.isEmpty());
+
+                resource=ottieniRisorsa(resource);
+
+                File file = new File("htdocs" + resource);
+
+                //se file esiste
+                if (file.exists()) {
+                    inviaFile(file, out, version, resource);
+                    
                     // se il file non esiste
                 } else {
-                    File file_not_found_error = new File("htdocs/not_found_error.html");
-                    out.writeBytes(version + " 404 Not Found\n");
-                    out.writeBytes("Content-Type: text/html\n");
-                    out.writeBytes("Content-Length: " + file_not_found_error.length() + "\n");
-                    out.writeBytes("\n");
-
-                    InputStream input = new FileInputStream(file_not_found_error);
-
-                    byte[] buf = new byte[8192];
-
-                    int n;
-
-                    while ((n = input.read(buf)) != -1) {
-                        out.write(buf, 0, n);
-
-                    }
-
-                    input.close();
+                    File file_error = new File("htdocs/not_found_error.html");
+                    inviaFile(file_error, out , version, "not_found_error.html");
 
                 }
             }
