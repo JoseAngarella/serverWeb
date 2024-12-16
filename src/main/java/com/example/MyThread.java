@@ -78,7 +78,6 @@ public class MyThread extends Thread {
 
     public void run(){
         try {
-            while(true){
                 BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
                 DataOutputStream out = new DataOutputStream(s.getOutputStream());
 
@@ -110,12 +109,15 @@ public class MyThread extends Thread {
                     inviaFile(file_error, out , version, "not_found_error.html");
 
                 }
-            }
+                s.close();
+
 
             
 
         } catch (Exception e) {
             e.printStackTrace();
+
         }
+  
     }
 }
